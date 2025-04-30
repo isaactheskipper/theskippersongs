@@ -442,7 +442,7 @@
         // Fetch list of all audios when the page loads
         window.onload = function() {
             setTimeout(() => {
-                fetch('http://localhost:5000/audios', { method: 'GET' })
+                fetch('https://theskippersongs-backend.onrender.com/audios', { method: 'GET' })
                     .then(response => response.json())
                     .then(data => {
                         if (data.length > 0) {
@@ -489,7 +489,7 @@
             // Hide previous audio player if visible
             audioPlayer.style.display = 'none';
             
-            fetch(`http://localhost:5000/audio-details/${audioId}`, { method: 'GET' })
+            fetch(`https://theskippersongs-backend.onrender.com/audio-details/${audioId}`, { method: 'GET' })
                 .then(response => response.json())
                 .then(data => {
                     if (data) {
@@ -506,7 +506,7 @@
                         audioPlayer.classList.add('visible');
 
                         // Set audio source and load
-                        audioSource.src = `http://localhost:5000/stream/${audioId}`;
+                        audioSource.src = `https://theskippersongs-backend.onrender.com/stream/${audioId}`;
                         audioElement.load();
                         audioElement.play();
 
@@ -515,7 +515,7 @@
 
                         // Set download link
                         downloadBtn.onclick = function() {
-                            window.location.href = `http://localhost:5000/download/${audioId}`;
+                            window.location.href = `https://theskippersongs-backend.onrender.com/download/${audioId}`;
                         };
 
                         // Stream audio on button click
