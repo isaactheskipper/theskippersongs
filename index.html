@@ -1,554 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Player</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <style>
-        /* Reset and body setup */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            background-size: cover;
-            background-attachment: fixed;
-            margin: 0;
-            padding: 0;
-            color: #333;
-            min-height: 100vh;
-            position: relative;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('/api/placeholder/1200/800');
-            background-size: cover;
-            background-position: center;
-            opacity: 0.1;
-            z-index: -1;
-        }
-
-        /* Page container */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* Header Styling */
-        header {
-            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
-            color: white;
-            text-align: center;
-            padding: 30px 0;
-            margin-bottom: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-            position: relative;
-            overflow: hidden;
-        }
-
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('/api/placeholder/400/200');
-            background-size: cover;
-            background-position: center;
-            opacity: 0.1;
-            z-index: 0;
-        }
-
-        header h1 {
-            font-size: 2.8rem;
-            font-weight: 700;
-            position: relative;
-            z-index: 1;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Audio List */
-        .audio-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .audio-list button {
-            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-            color: white;
-            border: none;
-            padding: 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .audio-list button::before {
-            content: '🎵';
-            margin-right: 10px;
-            font-size: 1.2rem;
-        }
-
-        .audio-list button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-            background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
-        }
-
-        /* Audio Player container */
-        .audio-player-container {
-            background-color: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-            display: none;
-            transform: translateY(20px);
-            opacity: 0;
-            transition: transform 0.4s ease, opacity 0.4s ease;
-            position: relative;
-        }
-
-        .audio-player-container.visible {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .audio-player-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('/api/placeholder/400/200');
-            background-size: cover;
-            background-position: center;
-            opacity: 0.05;
-            border-radius: 15px;
-            z-index: 0;
-        }
-
-        .audio-player-container h2 {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            color: #2E7D32;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Audio Player Controls */
-        .audio-controls {
-            margin-top: 25px;
-            display: flex;
-            justify-content: space-between;
-            position: relative;
-            z-index: 1;
-        }
-
-        .audio-controls button {
-            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-        }
-
-        .audio-controls button i {
-            margin-right: 8px;
-        }
-
-        .audio-controls button:hover {
-            background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .play-count {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 1.2rem;
-            color: #555;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            position: relative;
-            z-index: 1;
-        }
-
-        /* No audios message */
-        .no-audios-message {
-            text-align: center;
-            font-size: 1.4rem;
-            color: #777;
-            margin-top: 40px;
-            background-color: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .no-audios-message i {
-            font-size: 3rem;
-            color: #ccc;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        /* Custom audio player */
-        audio {
-            width: 100%;
-            margin-top: 20px;
-            border-radius: 8px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Page loading animation */
-        .page-loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
-        }
-
-        .page-loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .loader {
-            width: 80px;
-            height: 80px;
-            position: relative;
-        }
-
-        .loader:before,
-        .loader:after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-            animation: pulsate 2s ease-in-out infinite;
-        }
-
-        .loader:before {
-            width: 100%;
-            height: 100%;
-            background-color: rgba(76, 175, 80, 0.7);
-            animation-delay: -0.5s;
-        }
-
-        .loader:after {
-            width: 75%;
-            height: 75%;
-            background-color: rgba(76, 175, 80, 0.5);
-            top: 12.5%;
-            left: 12.5%;
-        }
-
-        @keyframes pulsate {
-            0% {
-                transform: scale(0.6);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1);
-                opacity: 0.5;
-            }
-            100% {
-                transform: scale(0.6);
-                opacity: 1;
-            }
-        }
-
-        /* Audio loading spinner */
-        .audio-loading {
-            display: none;
-            justify-content: center;
-            align-items: center;
-            margin: 20px 0;
-        }
-
-        .audio-loading .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(76, 175, 80, 0.2);
-            border-top: 4px solid #4CAF50;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Animation for buttons */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Wave animation for playing indicator */
-        .wave-animation {
-            display: inline-flex;
-            align-items: flex-end;
-            height: 20px;
-            margin-left: 10px;
-        }
-
-        .wave-animation span {
-            display: inline-block;
-            width: 3px;
-            height: 5px;
-            margin: 0 1px;
-            background-color: white;
-            animation: wave 1s infinite ease-in-out;
-        }
-
-        .wave-animation span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .wave-animation span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        .wave-animation span:nth-child(4) {
-            animation-delay: 0.6s;
-        }
-
-        @keyframes wave {
-            0%, 100% {
-                height: 5px;
-            }
-            50% {
-                height: 15px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>G.O.D - Music Page</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-color: #0e0e0e;
+      --text-color: #ffffff;
+      --accent-color: #1db954;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .cover-art {
+      width: 300px;
+      height: 300px;
+      background: #222;
+      background-image: url('G.O.D-Profile.jpeg');
+      background-size: cover;
+      background-position: center;
+      border-radius: 1rem;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+      margin-bottom: 1rem;
+    }
+    h1, h2 {
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      font-weight: normal;
+      color: var(--accent-color);
+      margin-bottom: 2rem;
+    }
+    audio {
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 1rem;
+    }
+    .control {
+      width: 300px; /* or any desired size */
+      height: 40px; /* standard height */
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .controls button {
+      padding: 0.75rem 1.5rem;
+      background-color: var(--accent-color);
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s;
+    }
+    .controls button:hover {
+      background-color: #17a34a;
+    }
+    .lyrics {
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      height: 300px;
+      overflow-y: auto;
+    }
+    .lyrics p.active {
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+    .socials {
+      margin-top: 2rem;
+    }
+    .socials a {
+      color: var(--text-color);
+      margin: 0 0.5rem;
+      font-size: 1.5rem;
+      transition: color 0.3s;
+    }
+    .socials a:hover {
+      color: var(--accent-color);
+    }
+      
+    
+    @media (max-width: 600px) {
+      .cover-art {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <!-- Page Loading Animation -->
-    <div class="page-loader" id="pageLoader">
-        <div class="loader"></div>
-    </div>
+  <div class="cover-art"></div>
+  <h1>G.O.D Skipper</h1>
+  <h2>by G.O.D</h2>
 
-    <div class="container">
-        <header>
-            <h1>Skipper Audio Player</h1>
-        </header>
+  
+<!-- Audio Player -->
+<div id="audio-player" class="audio-player-container">
+  <audio id="audioElement" controls>
+    <source id="audioSource" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  <div class="control">
+    
+  </div>
+</div>
 
-        <!-- Audio List -->
-        <div id="audio-list" class="audio-list">
-            <!-- Audio buttons will be dynamically added here -->
-        </div>
 
-        <!-- Audio Loading Indicator -->
-        <div id="audioLoading" class="audio-loading">
-            <div class="spinner"></div>
-        </div>
+  <div class="controls">
+    <button id="downloadBtn"><i class="fas fa-download"></i> Download</button>
+    <button id="streamBtn"><i class="fas fa-play"></i> Stream</button>
+    <button onclick="toggleTheme()"><i class="fas fa-adjust"></i> Theme</button>
+  </div>
 
-        <!-- Audio Player -->
-        <div id="audio-player" class="audio-player-container">
-            <h2>Audio Controls</h2>
-            
-            <!-- Audio Player -->
-            <audio id="audioElement" controls>
-                <source id="audioSource" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
+  <div class="lyrics" id="lyrics">
+    <h3>Lyrics</h3>
+    <p data-start="12" data-end="15">GOD yeah yeah</p>
+    <p data-start="15" data-end="17">GGGOD yeah yeah</p>
+    <p data-start="17.80" data-end="21">GGGOD yeah yeah</p>
+    <p data-start="20.9" data-end="23">GGGOD yeah yeah</p>
 
-            <!-- Controls -->
-            <div class="audio-controls">
-                <button class="button" id="downloadBtn">
-                    <i class="fas fa-download"></i> Download
-                </button>
-                <button class="button" id="streamBtn">
-                    <i class="fas fa-play"></i> Stream
-                </button>
-            </div>
+    <p data-start="24" data-end="28">GGGOD you gotta pray to the mighty GGGOD</p>
+    <p data-start="28.7" data-end="30">yeah yeah</p>
+    <p data-start="30" data-end="33">GGGOD yeah yeah</p>
+    <p data-start="33" data-end="36">GGGOD yeah yeah</p>
 
-            <!-- Play Count -->
-            <div class="play-count">
-                <p><i class="fas fa-headphones-alt"></i> Play Count: <span id="playCountValue">0</span></p>
-            </div>
-        </div>
-        
-        <!-- No Audios Message -->
-        <div id="no-audios-message" class="no-audios-message" style="display: none;">
-            <i class="fas fa-music"></i>
-            <p>No audios available at the moment. Please check back later.</p>
-        </div>
-    </div>
+  
+    <p data-start="36.8" data-end="40">manze venye tunaroga hii flow  (flow, flow) </p>
+    <p data-start="40" data-end="42"> rhymes zenu natupa chini kwa hii floor(ayy) </p>
+    <p data-start="43" data-end="45">itabidi nimeraise hiyo ego</p>
+    <p data-start="45.9" data-end="49">nitatoka hapa kama manze mimi ndio hero</p>
+    <p data-start="49" data-end="51">vile niko high nikama niko mangwai </p>
+    <p data-start="51.8" data-end="53"> rap zangu kama fine wine</p>
+    <p data-start="53" data-end="55">zenu sijui niite chai juu ni dry</p>
+    <p data-start="55.3" data-end="58"> haifai ishadai walai</p>
 
-    <script>
-        const audioListDiv = document.getElementById('audio-list');
-        const audioPlayer = document.getElementById('audio-player');
-        const audioElement = document.getElementById('audioElement');
-        const audioSource = document.getElementById('audioSource');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const streamBtn = document.getElementById('streamBtn');
-        const playCountValue = document.getElementById('playCountValue');
-        const noAudiosMessage = document.getElementById('no-audios-message');
-        const pageLoader = document.getElementById('pageLoader');
-        const audioLoading = document.getElementById('audioLoading');
+    <p data-start="58" data-end="62">manze umeskia venye nimewa fry kama rice(ha ha ha)</p>
+    <p data-start="62" data-end="65">so roll hiyo dice,nikupee  hiyo advice</p>
+    <p data-start="65" data-end="68">i am a good nigaa so manzee  sita add vice</p>
+    <p data-start="68" data-end="72">sitabonga mara twice ama utapay the price</p>  
+    <p data-start="72" data-end="74">nigga (yeah yeah yeah)</p>
 
-        // Page loading animation
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                pageLoader.classList.add('hidden');
-            }, 1000);
-        });
+    <p data-start="74" data-end="77">vile virusi alisema kuna nomanoma na noma</p>
+    <p data-start="77" data-end="79">nomanoma ni mimi nikijiita mnoma</p>
+    <p data-start="79" data-end="82">noma ni ule mtu si mnoma anajiita  mnoma</p>
+    <p data-start="82" data-end="86">na no man hawezi niambia mimi si mnoma, ayy!!!!!!!!!!!</p>
+  
+    <p data-start="86" data-end="90">GOD you gotta pray to the mighty GGGOD</p>
+    <p data-start="90" data-end="91">yeah yeah</p>
+    <p data-start="91.5" data-end="94">GGGOD yeah yeah</p>
+    <p data-start="94.5" data-end="97">GGGOD yeah yeah</p>
+  
+    <p data-start="98" data-end="101">lyrically abused this rappers seem so confused</p>
+    <p data-start="101" data-end="104">call your best rapper to see the bomb he got to diffuse</p>
+    <p data-start="104" data-end="107">you got 99 seconds before you get fuckin bruised</p>
+    <p data-start="107" data-end="110">my book gets amused by the words i use  ,even i  enthused</p>
+    <p data-start="110.7" data-end="114">i am like kdot and jcole  in the lab being fused</p>
+    <p data-start="114" data-end="117">leaving a mark in the rap world nigga ill infuse</p>
+    <p data-start="117" data-end="120">Copy paste flow rappers songs i gotta snooze</p>
+    <p data-start="120" data-end="121">Or you gonna get misused </p>
+    <p data-start="121" data-end="123"> you brain go diffuse the rhythm reused</p>
 
-        // Fetch list of all audios when the page loads
-        window.onload = function() {
-            setTimeout(() => {
-                fetch('https://theskippersongs-backend.onrender.com/audios', { method: 'GET' })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.length > 0) {
-                            data.forEach((audio, index) => {
-                                const audioButton = document.createElement('button');
-                                
-                                // Create button content with wave animation
-                                audioButton.innerHTML = `Play ${audio.filename}`;
-                                audioButton.classList.add('button');
-                                audioButton.style.animation = `fadeIn 0.5s ease forwards ${index * 0.1}s`;
-                                audioButton.style.opacity = '0';
-                                
-                                audioButton.onclick = function() {
-                                    // Reset all buttons to default state
-                                    document.querySelectorAll('.audio-list button').forEach(btn => {
-                                        btn.innerHTML = btn.innerHTML.replace(/<div class="wave-animation">[^<]*<\/div>/g, '');
-                                    });
-                                    
-                                    // Add wave animation to clicked button
-                                    this.innerHTML = `Play ${audio.filename} <div class="wave-animation">
-                                        <span></span><span></span><span></span><span></span>
-                                    </div>`;
-                                    
-                                    loadAudio(audio.id);
-                                };
-                                audioListDiv.appendChild(audioButton);
-                            });
-                        } else {
-                            noAudiosMessage.style.display = 'block';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching audio list:', error);
-                        noAudiosMessage.style.display = 'block';
-                    });
-            }, 1000);
+  
+    <p data-start="123" data-end="126">this is high time i take over the throne</p>
+    <p data-start="126" data-end="129">i am a real king not one of the clones</p>
+    <p data-start="129" data-end="132">got to move fast yeah i am ready to go</p>
+    <p data-start="132" data-end="135">game of life be the master of your tempo</p>
+    
+    <p data-start="135" data-end="139">GOD you gotta pray to the mighty GGGOD</p>
+    <p data-start="139" data-end="141">yeah yeah</p>
+    <p data-start="141" data-end="143">GGGOD yeah yeah</p>
+    <p data-start="143.7" data-end="146">GGGOD yeah yeah</p>
+    <p data-start="147" data-end="148">GGGOD !!!!!</p>
+
+  </div>
+  
+
+  <div class="socials">
+    <a href="https://www.instagram.com/theskippergallery/"><i class="fab fa-instagram"></i></a>
+    <a href="https://youtube.com/@the.skipper21?si=0iYAkNodZmKVWTO_"><i class="fab fa-youtube"></i></a>
+  </div>
+
+  
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const audioElement = document.getElementById('audioElement');
+  const audioSource = document.getElementById('audioSource');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const streamBtn = document.getElementById('streamBtn');
+
+  fetch('https://theskippersongs-backend.onrender.com/audios', { method: 'GET' })
+    .then(response => response.json())
+    .then(data => {
+      if (data.length > 0) {
+        const firstAudio = data[0];
+        const audioUrl = `https://theskippersongs-backend.onrender.com/stream/${firstAudio.id}`;
+        audioSource.src = audioUrl;
+        audioElement.load();
+
+        downloadBtn.onclick = function() {
+          window.location.href = `https://theskippersongs-backend.onrender.com/download/${firstAudio.id}`;
         };
 
-        // Function to load audio by its ID
-        function loadAudio(audioId) {
-            // Show loading animation
-            audioLoading.style.display = 'flex';
-            
-            // Hide previous audio player if visible
-            audioPlayer.style.display = 'none';
-            
-            fetch(`https://theskippersongs-backend.onrender.com/audio-details/${audioId}`, { method: 'GET' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data) {
-                        // Hide loading animation
-                        audioLoading.style.display = 'none';
-                        
-                        // Show audio player
-                        audioPlayer.style.display = 'block';
-                        
-                        // Force reflow to enable transition
-                        void audioPlayer.offsetWidth;
-                        
-                        // Add visible class to trigger animation
-                        audioPlayer.classList.add('visible');
+        streamBtn.onclick = function() {
+          if (audioElement.paused) {
+            audioElement.play();
+            streamBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+          } else {
+            audioElement.pause();
+            streamBtn.innerHTML = '<i class="fas fa-play"></i> Stream';
+          }
+        };
+      }
+    })
+    .catch(err => {
+      console.error("Failed to load audio:", err);
+    });
+});
 
-                        // Set audio source and load
-                        audioSource.src = `https://theskippersongs-backend.onrender.com/stream/${audioId}`;
-                        audioElement.load();
-                        audioElement.play();
+function toggleTheme() {
+    const root = document.documentElement;
+    const isDark = getComputedStyle(root).getPropertyValue('--bg-color').trim() === '#0e0e0e';
 
-                        // Update play count
-                        playCountValue.textContent = data.play_count;
+    root.style.setProperty('--bg-color', isDark ? '#ffffff' : '#0e0e0e');
+    root.style.setProperty('--text-color', isDark ? '#000000' : '#ffffff');
+  }
+</script>
 
-                        // Set download link
-                        downloadBtn.onclick = function() {
-                            window.location.href = `https://theskippersongs-backend.onrender.com/download/${audioId}`;
-                        };
-
-                        // Stream audio on button click
-                        streamBtn.onclick = function() {
-                            audioElement.play();
-                        };
-                        
-                        // Update button icons when playing/paused
-                        audioElement.onplay = function() {
-                            streamBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
-                        };
-                        
-                        audioElement.onpause = function() {
-                            streamBtn.innerHTML = '<i class="fas fa-play"></i> Stream';
-                        };
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading audio details:', error);
-                    audioLoading.style.display = 'none';
-                });
-        }
-        
-        // Toggle play/pause when stream button is clicked
-        streamBtn.addEventListener('click', function() {
-            if (audioElement.paused) {
-                audioElement.play();
-                this.innerHTML = '<i class="fas fa-pause"></i> Pause';
-            } else {
-                audioElement.pause();
-                this.innerHTML = '<i class="fas fa-play"></i> Stream';
-            }
-        });
-    </script>
 </body>
 </html>
