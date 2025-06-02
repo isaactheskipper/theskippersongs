@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,8 +56,8 @@
       margin-bottom: 1rem;
     }
     .control {
-      width: 300px; /* or any desired size */
-      height: 40px; /* standard height */
+      width: 300px;
+      height: 40px;
     }
     .controls {
       display: flex;
@@ -106,8 +107,6 @@
     .socials a:hover {
       color: var(--accent-color);
     }
-      
-    
     @media (max-width: 600px) {
       .cover-art {
         width: 100%;
@@ -125,18 +124,13 @@
   <h1>G.O.D Skipper</h1>
   <h2>by G.O.D</h2>
 
-  
-<!-- Audio Player -->
-<div id="audio-player" class="audio-player-container">
-  <audio id="audioElement" controls>
-    <source id="audioSource" type="audio/mpeg">
-    Your browser does not support the audio element.
-  </audio>
-  <div class="control">
-    
+  <div id="audio-player" class="audio-player-container">
+    <audio id="audioElement" controls>
+      <source id="audioSource" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+    <div class="control"></div>
   </div>
-</div>
-
 
   <div class="controls">
     <button id="downloadBtn"><i class="fas fa-download"></i> Download</button>
@@ -152,7 +146,7 @@
     <p data-start="20.9" data-end="23">GGGOD yeah yeah</p>
 
     <p data-start="24" data-end="28">GGGOD you gotta pray to the mighty GGGOD</p>
-    <p data-start="28.7" data-end="30">yeah yeah</p>
+    <p data-start="28.7" data-end="29.8">yeah yeah</p>
     <p data-start="30" data-end="33">GGGOD yeah yeah</p>
     <p data-start="33" data-end="36">GGGOD yeah yeah</p>
 
@@ -203,22 +197,20 @@
     <p data-start="141" data-end="143">GGGOD yeah yeah</p>
     <p data-start="143.7" data-end="146">GGGOD yeah yeah</p>
     <p data-start="147" data-end="148">GGGOD !!!!!</p>
-
   </div>
-  
 
   <div class="socials">
     <a href="https://www.instagram.com/theskippergallery/"><i class="fab fa-instagram"></i></a>
     <a href="https://youtube.com/@the.skipper21?si=0iYAkNodZmKVWTO_"><i class="fab fa-youtube"></i></a>
   </div>
 
-  
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const audioElement = document.getElementById('audioElement');
   const audioSource = document.getElementById('audioSource');
   const downloadBtn = document.getElementById('downloadBtn');
   const streamBtn = document.getElementById('streamBtn');
+  const lyricLines = document.querySelectorAll('#lyrics p');
 
   fetch('https://theskippersongs-backend.onrender.com/audios', { method: 'GET' })
     .then(response => response.json())
@@ -247,16 +239,51 @@ document.addEventListener('DOMContentLoaded', function () {
     .catch(err => {
       console.error("Failed to load audio:", err);
     });
+
+  // Lyrics synchronization
+  audioElement.addEventListener('timeupdate', () => {
+    const currentTime = audioElement.currentTime;
+    lyricLines.forEach(line => {
+      const start = parseFloat(line.getAttribute('data-start'));
+      const end = parseFloat(line.getAttribute('data-end'));
+      if (currentTime >= start && currentTime < end) {
+        line.classList.add('active');
+        line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        line.classList.remove('active');
+      }
+    });
+  });
 });
 
 function toggleTheme() {
-    const root = document.documentElement;
-    const isDark = getComputedStyle(root).getPropertyValue('--bg-color').trim() === '#0e0e0e';
+  const root = document.documentElement;
+  const isDark = getComputedStyle(root).getPropertyValue('--bg-color').trim() === '#0e0e0e';
 
-    root.style.setProperty('--bg-color', isDark ? '#ffffff' : '#0e0e0e');
-    root.style.setProperty('--text-color', isDark ? '#000000' : '#ffffff');
+  root.style.setProperty('--bg-color', isDark ? '#ffffff' : '#0e0e0e');
+  root.style.setProperty('--text-color', isDark ? '#000000' : '#ffffff');
+
+  const lyricsBox = document.querySelector('.lyrics');
+  if (lyricsBox) {
+    lyricsBox.style.background = isDark ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+    lyricsBox.style.color = isDark ? '#000' : '#fff';
   }
-</script>
+}
+// Update the stream button text based on actual playback state
+audioElement.addEventListener('play', () => {
+  streamBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+});
 
-</body>
-</html>
+audioElement.addEventListener('pause', () => {
+  streamBtn.innerHTML = '<i class="fas fa-play"></i> Stream';
+});
+
+// Toggle playback when the button is clicked
+streamBtn.onclick = function () {
+  if (audioElement.paused) {
+    audioElement.play();
+  } else {
+    audioElement.pause();
+  }
+};
+</script>
